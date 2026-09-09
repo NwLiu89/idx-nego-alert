@@ -1,0 +1,65 @@
+name: IDX Nego Alert
+
+# Polls the IDX negotiated tape during Jakarta trading hours and pushes any deal at or above
+# the threshold to Telegram. Deals already sent are recorded in state/seen.json, which this
+# workflow commits back to the repo so an alert is never sent twice.
+
+on:
+  schedule:
+    # Every 5 minutes, 02:00-10:55 UTC = 09:00-17:55 WIB, Mon-Fri.
+    # The nego tape has been observed running as late as 16:24 WIB, so the window
+    # deliberately extends well past the regular close.
+    - cron: '*/5 2-10 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Fetch and log matches without sending or recording anything'
+        type: boolean
+        default: false
+
+# Never let two polls race on the same state file and git push.
+concurrency:
+  group: nego-alert
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # a shallow clone cannot 'git pull --rebase' on push contention
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # No install step: the whole thing is Node standard library. Tests run in ci.yml on push,
+      # not here - re-running them on every 5-minute poll would burn minutes for nothing.
+      - name: Poll for big nego deals
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NEGO_THRESHOLD_IDR: '100000000000'
+        run: node src/main.js ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      # always(): if delivery fails partway through a batch, main.js has still recorded the
+      # deals that did go out. Skipping the commit on failure would resend them next poll.
+      - name: Commit state if any alert fired
+        if: always()
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- state/seen.json; then
+            echo "No new alerts - nothing to commit."
+            exit 0
+          fi
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add state/seen.json
+          git commit -m "chore: record sent nego alerts [skip ci]"
+          # A concurrent run or a manual push may have moved the branch; rebase and retry once.
+          git push || (git pull --rebase --autostash && git push)
