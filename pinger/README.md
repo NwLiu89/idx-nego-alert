@@ -1,14 +1,17 @@
 # Trigger
 
-GitHub's `schedule` trigger does not work on this repository. On 2026-09-10 two separate
-workflows — the real one and a minimal probe running `*/5 * * * *` with no secrets and a single
-`date` command — were both `active`, both ran on `workflow_dispatch` in seconds, and together
-produced **zero** scheduled runs across several hours. Every documented precondition was met:
-public repo, default branch, valid cron, not a fork, Actions enabled, minutes available, no
-GitHub incident. The cause was never identified and is open with GitHub Support.
+GitHub's `schedule` trigger is unusable on this repository. On 2026-09-10 the alert workflow
+fired **1 scheduled run out of ~94 slots**, and a minimal probe (`*/5 * * * *`, no secrets, one
+`date` command) fired **1 out of ~67** — long silences broken by an occasional run, with no
+pattern. Both workflows were `active` and both dispatched in seconds every time. Every documented
+precondition was met: public repo, default branch, valid cron, not a fork, Actions enabled,
+minutes available, no GitHub incident. The cause was never identified and is open with GitHub
+Support.
 
-So the clock moved off GitHub. This Worker calls `workflow_dispatch` every five minutes; the
-polling, filtering and delivery logic is untouched and still runs in Actions.
+An alerter cannot run on a trigger that delivers ~1% of its slots, so the clock moved off GitHub.
+
+This Worker calls `workflow_dispatch` every five minutes; the polling, filtering and delivery
+logic is untouched and still runs in Actions.
 
 ## Setup
 
@@ -47,7 +50,7 @@ The Worker starts throwing `workflow_dispatch failed: HTTP 401`, visible in `wra
 in the Cloudflare dashboard. **Nothing else tells you.** The alerter simply goes quiet, which
 looks identical to a day with no large deals — so the token expiry date is worth a calendar entry.
 
-## If GitHub cron ever starts working
+## If GitHub cron ever becomes reliable
 
 Delete this Worker (`npx wrangler delete`) and the `cron-probe.yml` workflow. The schedule block
 in `nego-alert.yml` was left in place, so scheduling resumes by itself the moment GitHub does.

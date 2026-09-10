@@ -99,10 +99,11 @@ node src/main.js                                          # live send (needs the
 - **The feed fills intraday**, confirmed 2026-09-10: at 10:03 WIB `/api/nego` returned 99 deals
   with `live: true`, against 581 for the whole of the previous session. Deals print as they happen,
   so a poll during the session sees a large deal the same morning rather than after the close.
-- **GitHub cron does not work on this repository at all** — not "lags", never fires. Proven with
-  a minimal probe workflow on 2026-09-10; cause unidentified, open with GitHub Support. The poll is
-  triggered from outside instead, see [`pinger/`](pinger/README.md). The `schedule:` block is left
-  in `nego-alert.yml` so it resumes on its own if GitHub ever fixes this.
+- **GitHub cron fires about 1% of the time here.** On 2026-09-10 the alert workflow got 1 run out
+  of ~94 scheduled slots, and a minimal probe got 1 out of ~67 — hours of silence, then a single
+  run. Not "never", but far too unreliable to alert on. Cause unidentified, open with GitHub
+  Support. The poll is triggered from outside instead, see [`pinger/`](pinger/README.md). The
+  `schedule:` block stays in `nego-alert.yml`; it costs nothing and covers us if GitHub recovers.
 - **The data source is a third party.** `idx.indoalgo.com` is not operated by this project. If
   `/api/nego` changes shape or starts requiring auth, the poll fails loudly (a red run) rather than
   going quiet.
