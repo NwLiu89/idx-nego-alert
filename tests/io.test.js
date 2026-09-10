@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { fetchNego } from '../src/fetch.js';
 import { sendMessage } from '../src/telegram.js';
+import { withRetry } from '../src/retry.js';
 
 const ok = (body) => ({ ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) });
 const httpError = (status) => ({ ok: false, status, json: async () => ({}), text: async () => 'boom' });
@@ -109,4 +110,21 @@ test('sendMessage surfaces the API description when Telegram rejects the call', 
     }),
     /chat not found/,
   );
+});
+
+test('withRetry still attempts once when told not to retry', async () => {
+  // retries: 0 used to skip the call entirely and throw undefined.
+  let calls = 0;
+  const result = await withRetry(async () => (calls++, 'ok'), { retries: 0, backoffMs: 0 });
+  assert.equal(result, 'ok');
+  assert.equal(calls, 1);
+});
+
+test('withRetry surfaces the real error when told not to retry', async () => {
+  let calls = 0;
+  await assert.rejects(
+    withRetry(async () => { calls++; throw new Error('boom'); }, { retries: 0, backoffMs: 0 }),
+    /boom/,
+  );
+  assert.equal(calls, 1);
 });
