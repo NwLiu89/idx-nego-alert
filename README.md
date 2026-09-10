@@ -96,10 +96,9 @@ node src/main.js                                          # live send (needs the
 
 ## Known limits
 
-- **Feed latency is not yet characterised.** `/api/nego` returns a `live` flag that was `false`
-  when this was built (outside market hours). Whether the endpoint fills in *during* the session or
-  only after the close is still unverified — see below. Either way the alerts are correct; only
-  their timeliness differs.
+- **The feed fills intraday**, confirmed 2026-09-10: at 10:03 WIB `/api/nego` returned 99 deals
+  with `live: true`, against 581 for the whole of the previous session. Deals print as they happen,
+  so a poll during the session sees a large deal the same morning rather than after the close.
 - **GitHub cron is best-effort** and can lag 5–15 minutes under load. Five minutes is also the
   finest granularity GitHub offers.
 - **The data source is a third party.** `idx.indoalgo.com` is not operated by this project. If
@@ -108,15 +107,3 @@ node src/main.js                                          # live send (needs the
 - Only **single deals** count toward the threshold. A position split across several smaller tickets
   will not trigger an alert even if the day's total for that stock exceeds Rp 100 bn.
 
-### Checking feed latency
-
-Run this a few times ~15 minutes apart during 09:00–16:00 WIB and see whether `total_count` grows
-and whether `live` flips to `true`:
-
-```bash
-curl -s "https://idx.indoalgo.com/api/nego" \
-  | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);console.log(new Date().toISOString(), j.total_count, 'live:', j.live)})"
-```
-
-If it turns out the feed is end-of-day only, narrowing the cron window to the post-close hours
-would cut the run count without losing a single alert.
