@@ -63,3 +63,21 @@ for (const chat of chats.values()) {
   const who = chat.title ?? (name || chat.username || '?');
   console.log(`  ${chat.id}\t(${chat.type}: ${who})`);
 }
+
+// --send-test proves the token and chat id work together end to end, which is the only
+// thing that distinguishes a fixed setup from a plausible-looking one.
+if (process.argv.includes('--send-test')) {
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!chatId) {
+    console.error('\nTELEGRAM_CHAT_ID is not set, so there is nothing to test.');
+    process.exit(1);
+  }
+  const { sendMessage } = await import('../src/telegram.js');
+  console.log(`\nSending a test message to chat ${chatId} ...`);
+  await sendMessage('<b>IDX Nego Alert</b>\nSetup test - delivery is working.', {
+    token,
+    chatId,
+    retries: 0,
+  });
+  console.log('Sent. Check Telegram.');
+}

@@ -1,11 +1,16 @@
 name: Telegram whoami
 
 # Setup diagnostic, run by hand. Answers "which bot is TELEGRAM_BOT_TOKEN, and what is my
-# chat id" using the secret already stored here, so the token never has to be copied around.
-# Delete this workflow once TELEGRAM_CHAT_ID is confirmed working.
+# chat id" using the secrets already stored here, so the token never has to be copied around.
+# Delete this workflow once a real alert has been delivered.
 
 on:
   workflow_dispatch:
+    inputs:
+      send_test:
+        description: 'Also send a test message to TELEGRAM_CHAT_ID'
+        type: boolean
+        default: false
 
 jobs:
   whoami:
@@ -19,4 +24,5 @@ jobs:
       - name: Identify bot and chats
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        run: node scripts/telegram-whoami.js
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node scripts/telegram-whoami.js ${{ inputs.send_test && '--send-test' || '' }}
