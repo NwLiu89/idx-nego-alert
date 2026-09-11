@@ -3,6 +3,6 @@ main = "worker.js"
 compatibility_date = "2026-09-10"
 
 # Cloudflare cron is UTC, same as the schedule this replaces:
-# every 5 minutes, 02:00-10:55 UTC = 09:00-17:55 WIB, Mon-Fri.
+# every 15 minutes, 02:00-10:45 UTC = 09:00-17:45 WIB, Mon-Fri.
 [triggers]
-crons = ["*/5 2-10 * * 1-5"]
+crons = ["*/15 2-10 * * 1-5"]

@@ -20,7 +20,7 @@ Expect roughly **3 alerts per trading day** — 61 qualifying deals across the 2
 ## How it works
 
 A GitHub Actions job polls [`idx.indoalgo.com/api/nego`](https://idx.indoalgo.com/nego.html) every
-five minutes during Jakarta trading hours, keeps deals at or above the threshold, drops any it has
+15 minutes during Jakarta trading hours, keeps deals at or above the threshold, drops any it has
 already sent, and pushes the rest to your Telegram bot.
 
 ```
@@ -90,7 +90,7 @@ node src/main.js                                          # live send (needs the
 |---|---|
 | `--dry-run` | Fetch and print matches; send nothing, write no state |
 | `--date YYYYMMDD` | Replay a specific trading day |
-| `--threshold <rupiah>` | Override the Rp 100 bn bar |
+| `--threshold <rupiah>` | Override the Rp 50 bn bar |
 | `NEGO_THRESHOLD_IDR` | Same, as an environment variable |
 | `NEGO_STATE_PATH` | Point the seen-set somewhere other than `state/seen.json` |
 
@@ -108,5 +108,5 @@ node src/main.js                                          # live send (needs the
   `/api/nego` changes shape or starts requiring auth, the poll fails loudly (a red run) rather than
   going quiet.
 - Only **single deals** count toward the threshold. A position split across several smaller tickets
-  will not trigger an alert even if the day's total for that stock exceeds Rp 100 bn.
+  will not trigger an alert even if the day's total for that stock exceeds Rp 50 bn.
 

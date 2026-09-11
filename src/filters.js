@@ -20,7 +20,7 @@
  * raising the threshold never renames a deal that was already sent.
  */
 
-export const DEFAULT_THRESHOLD_IDR = 100_000_000_000; // Rp 100 billion
+export const DEFAULT_THRESHOLD_IDR = 50_000_000_000; // Rp 50 billion
 
 const KEY_FIELDS = ['date', 'code', 'price', 'volume'];
 

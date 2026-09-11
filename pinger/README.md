@@ -10,7 +10,7 @@ Support.
 
 An alerter cannot run on a trigger that delivers ~1% of its slots, so the clock moved off GitHub.
 
-This Worker calls `workflow_dispatch` every five minutes; the polling, filtering and delivery
+This Worker calls `workflow_dispatch` every 15 minutes; the polling, filtering and delivery
 logic is untouched and still runs in Actions.
 
 ## Setup
@@ -38,10 +38,10 @@ npx wrangler deploy
 **3. Confirm it fires**
 
 ```bash
-npx wrangler tail        # watch live; expect a "dispatched nego-alert.yml" line every 5 min
+npx wrangler tail        # watch live; expect a "dispatched nego-alert.yml" line every 15 min
 ```
 
-Or check the repo's Actions tab — runs should appear on their own, five minutes apart, during
+Or check the repo's Actions tab — runs should appear on their own, 15 minutes apart, during
 Jakarta trading hours.
 
 ## If the token expires or is revoked

@@ -6,10 +6,10 @@ name: IDX Nego Alert
 
 on:
   schedule:
-    # Every 5 minutes, 02:00-10:55 UTC = 09:00-17:55 WIB, Mon-Fri.
+    # Every 15 minutes, 02:00-10:45 UTC = 09:00-17:45 WIB, Mon-Fri.
     # The nego tape has been observed running as late as 16:24 WIB, so the window
     # deliberately extends well past the regular close.
-    - cron: '*/5 2-10 * * 1-5'
+    - cron: '*/15 2-10 * * 1-5'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -39,12 +39,12 @@ jobs:
           node-version: '22'
 
       # No install step: the whole thing is Node standard library. Tests run in ci.yml on push,
-      # not here - re-running them on every 5-minute poll would burn minutes for nothing.
+      # not here - re-running them on every poll would burn minutes for nothing.
       - name: Poll for big nego deals
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          NEGO_THRESHOLD_IDR: '100000000000'
+          NEGO_THRESHOLD_IDR: '50000000000'
         run: node src/main.js ${{ inputs.dry_run && '--dry-run' || '' }}
 
       # always(): if delivery fails partway through a batch, main.js has still recorded the

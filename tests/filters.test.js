@@ -14,13 +14,14 @@ const deal = (over = {}) => ({
 });
 
 test('threshold defaults to Rp 100 billion', () => {
-  assert.equal(DEFAULT_THRESHOLD_IDR, 100_000_000_000);
+  assert.equal(DEFAULT_THRESHOLD_IDR, 50_000_000_000);
 });
 
 test('keeps deals at or above the threshold, drops those below', () => {
-  const rows = [deal({ value: 200e9 }), deal({ value: 100e9, code: 'AAAA' }), deal({ value: 99.9e9, code: 'BBBB' })];
+  const T = DEFAULT_THRESHOLD_IDR;
+  const rows = [deal({ value: T * 2 }), deal({ value: T, code: 'AAAA' }), deal({ value: T - 1, code: 'BBBB' })];
   const kept = bigDeals(rows).map((d) => d.code);
-  assert.deepEqual(kept, ['UNTR', 'AAAA']);
+  assert.deepEqual(kept, ['UNTR', 'AAAA'], 'a deal exactly on the bar must alert');
 });
 
 test('a deal key is stable across separate calls', () => {
@@ -70,11 +71,17 @@ test('selectNew with an empty seen set passes everything through', () => {
   assert.deepEqual(selectNew(deals, new Set()), deals);
 });
 
-test('real captured response yields exactly the one UNTR deal above Rp 100 bn', () => {
+test('real captured response yields the five deals above Rp 50 bn', () => {
   const found = bigDeals(fixture.rows);
-  assert.equal(found.length, 1);
-  assert.equal(found[0].code, 'UNTR');
+  assert.deepEqual(found.map((d) => d.code), ['UNTR', 'UNTR', 'NSSS', 'TLKM', 'DSSA']);
   assert.equal(found[0].value, 128185000000);
+  assert.ok(found.every((d) => Number(d.value) >= DEFAULT_THRESHOLD_IDR));
+});
+
+test('the same response at the old Rp 100 bn bar yields only the one UNTR deal', () => {
+  // Guards the threshold being honoured rather than hard-coded anywhere downstream.
+  const found = bigDeals(fixture.rows, 100_000_000_000);
+  assert.deepEqual(found.map((d) => d.code), ['UNTR']);
 });
 
 test('every key from the real response is unique', () => {

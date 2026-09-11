@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { run, wibDate, parseArgs } from '../src/main.js';
+import { DEFAULT_THRESHOLD_IDR } from '../src/filters.js';
 import { loadState, saveState } from '../src/state.js';
 
 const statePath = () => join(mkdtempSync(join(tmpdir(), 'nego-')), 'seen.json');
@@ -50,7 +51,7 @@ test('a qualifying deal is sent and its key recorded', async () => {
 });
 
 test('deals below the threshold are ignored entirely', async () => {
-  const { sent, opts } = harness([deal({ value: 99_999_999_999 })]);
+  const { sent, opts } = harness([deal({ value: DEFAULT_THRESHOLD_IDR - 1 })]);
   const summary = await run(opts);
   assert.equal(sent.length, 0);
   assert.equal(summary.matched, 0);
